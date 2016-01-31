@@ -1,0 +1,3 @@
+[submodule "libqatemcontrol"]
+	path = libqatemcontrol
+	url = https://github.com/petersimonsson/libqatemcontrol.git
