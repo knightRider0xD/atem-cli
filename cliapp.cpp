@@ -332,11 +332,11 @@ void CLIApp::getProgram(){
 void CLIApp::getTransitionCurrentKey(quint8 keyer){
     quint8 bitmap = m_mixEffect->keyersOnCurrentTransition(); //produces bitmap where lsb is keyer 0. Will right-shift to select bit and modulo for value
     if(keyer == 255){
-        for(int i=0; i<5; i++){
-            qout << "TCURRKEY " << i << ": " << ((bitmap >> i)%2) << endl;
+        for(int i=0; i<4; i++){
+            qout << "TCURRKEY " << i << ": " << ((bitmap >> (i+1))%2) << endl;
         }
     } else {
-        qout << "TCURRKEY " << keyer << ": " << ((bitmap >> keyer)%2) << endl;
+        qout << "TCURRKEY " << keyer << ": " << ((bitmap >> (keyer+1))%2) << endl;
     }
 }
 
@@ -363,11 +363,11 @@ void CLIApp::getTransitionMixFrames(){
 void CLIApp::getTransitionNextKey(quint8 keyer){
     quint8 bitmap = m_mixEffect->keyersOnNextTransition(); //produces bitmap where lsb is keyer 0. Will right-shift to select bit and modulo for value
     if(keyer == 255){
-        for(int i=0; i<5; i++){
-            qout << "TNEXTKEY " << i << ": " << ((bitmap >> i)%2) << endl;
+        for(int i=0; i<4; i++){
+            qout << "TNEXTKEY " << i << ": " << ((bitmap >> (i+1))%2) << endl;
         }
     } else {
-        qout << "TNEXTKEY " << keyer << ": " << ((bitmap >> keyer)%2) << endl;
+        qout << "TNEXTKEY " << keyer << ": " << ((bitmap >> (keyer+1))%2) << endl;
     }
 }
 
@@ -495,8 +495,7 @@ void CLIApp::setTransitionMixFrames(quint8 frames){
 }
 
 void CLIApp::setTransitionNextKey(quint8 keyer, bool state){
-    // 0 for background
-    m_mixEffect->setKeyOnNextTransition(keyer, state);
+    m_mixEffect->setUpstreamKeyOnNextTransition(keyer, state);
 }
 
 void CLIApp::setTransitionNextStyle(quint8 style){
@@ -750,8 +749,8 @@ void CLIApp::onMixEffectNextTransitionStyleChanged(quint8 me, quint8 style){
 }
 void CLIApp::onMixEffectKeyersOnNextTransitionChanged(quint8 me, quint8 keyers){
     Q_UNUSED(me)
-    for(int i=0; i<5; i++){
-        qout << "TNEXTKEY " << i << ": " << ((keyers >> i)%2) << endl;
+    for(int i=0; i<4; i++){
+        qout << "TNEXTKEY " << i << ": " << ((keyers >> (i+1))%2) << endl;
     }
     
 }
@@ -761,8 +760,8 @@ void CLIApp::onMixEffectCurrentTransitionStyleChanged(quint8 me, quint8 style){
 }
 void CLIApp::onMixEffectKeyersOnCurrentTransitionChanged(quint8 me, quint8 keyers){
     Q_UNUSED(me)
-    for(int i=0; i<5; i++){
-        qout << "TCURRKEY " << i << ": " << ((keyers >> i)%2) << endl;
+    for(int i=0; i<4; i++){
+        qout << "TCURRKEY " << i << ": " << ((keyers >> (i+1))%2) << endl;
     }
 }
 
