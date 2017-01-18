@@ -54,12 +54,14 @@ private:
     QTextStream qout;
     QHostAddress atem_address;
     QAtemMixEffect *m_mixEffect;
+    QAtemDownstreamKey *m_downstreamKey;
     QAtemConnection *m_atemConnection;
     CLIReader *reader;
     
     QList<quint16> aLvlUpdateList;
     
     void connectAtemEvents(); 
+    void connectDSKeyerEvents();
     void connectMixEffectEvents();
     
 public:
@@ -185,10 +187,7 @@ public slots:
     void onAtemDownstreamKeyClipChanged(quint8 keyer, float clip);
     void onAtemDownstreamKeyGainChanged(quint8 keyer, float gain);
     void onAtemDownstreamKeyEnableMaskChanged(quint8 keyer, bool enable);
-    void onAtemDownstreamKeyTopMaskChanged(quint8 keyer, float value);
-    void onAtemDownstreamKeyBottomMaskChanged(quint8 keyer, float value);
-    void onAtemDownstreamKeyLeftMaskChanged(quint8 keyer, float value);
-    void onAtemDownstreamKeyRightMaskChanged(quint8 keyer, float value);
+    void onAtemDownstreamKeyMaskChanged(quint8 keyer, float top, float bottom, float left, float right);
 
     void onAtemColorGeneratorColorChanged(quint8 generator, const QColor& color);
 
