@@ -97,7 +97,7 @@ void CLIApp::help(){
     "   PREV           {GET|SET|HELP}          INDEX\n"             //done
     "   PROG           {GET|SET|HELP}          INDEX\n"             //done
     "   SETTINGS       {SAVE|CLEAR}            YES\n"               //done
-    //"   TCURRKEY\n"
+    "   TCURRKEY       {GET}                   ALL|INDEX\n"         //done
     "   TCURRSTYLE     {GET}\n"                                     //done //0 = Mix, 1 = Dip, 2 = Wipe, 3 = DVE and 4 = Stinger
     "   TDIPFRAMES     {GET|SET}               FRAMES\n"            //done
     "   TDIPSRC        {GET|SET}               SOURCE\n"            //done
@@ -112,7 +112,7 @@ void CLIApp::help(){
     //"   TLYSTATE\n"
     "   TMIXFRAMES     {GET|SET}               FRAMES\n"            //done
     //"   TNEXTBG        {GET|SET}               INDEX\n" // if off/on background disappears/appears next trans
-    //"   TNEXTKEY\n"  // if off/on key disappears/appears next trans
+    "   TNEXTKEY       {GET|SET}               ALL|INDEX STATE\n"  //done // if off/on key disappears/appears next trans. 0 = Background, 1 = Key1 ...
     "   TNEXTSTYLE     {GET|SET}               STYLE\n"             //done //0 = Mix, 1 = Dip, 2 = Wipe, 3 = DVE and 4 = Stinger
     "   TPOS           {GET|SET}               POSITION\n"          //done //goes from 0 to 9999 then flips to 0; must send 0 to end transition.
     "   TPREV          {ENABLE|DISABLE|GET}\n"                      //done
@@ -329,6 +329,17 @@ void CLIApp::getProgram(){
     qout << "PROG: " << m_mixEffect->programInput() << endl;
 }
 
+void CLIApp::getTransitionCurrentKey(quint8 keyer){
+    quint8 bitmap = m_mixEffect->keyersOnCurrentTransition(); //produces bitmap where lsb is keyer 0. Will right-shift to select bit and modulo for value
+    if(keyer == 255){
+        for(int i=0; i<5; i++){
+            qout << "TCURRKEY " << i << ": " << ((bitmap >> i)%2) << endl;
+        }
+    } else {
+        qout << "TCURRKEY " << keyer << ": " << ((bitmap >> keyer)%2) << endl;
+    }
+}
+
 void CLIApp::getTransitionCurrentStyle(){
     qout << "TCURRSTYLE: " << m_mixEffect->currentTransitionStyle() << endl;
 }
@@ -347,6 +358,17 @@ void CLIApp::getTransitionFrames(){
 
 void CLIApp::getTransitionMixFrames(){
     qout << "TMIXFRAMES: " << m_mixEffect->mixFrames() << endl;
+}
+
+void CLIApp::getTransitionNextKey(quint8 keyer){
+    quint8 bitmap = m_mixEffect->keyersOnNextTransition(); //produces bitmap where lsb is keyer 0. Will right-shift to select bit and modulo for value
+    if(keyer == 255){
+        for(int i=0; i<5; i++){
+            qout << "TNEXTKEY " << i << ": " << ((bitmap >> i)%2) << endl;
+        }
+    } else {
+        qout << "TNEXTKEY " << keyer << ": " << ((bitmap >> keyer)%2) << endl;
+    }
 }
 
 void CLIApp::getTransitionNextStyle(){
@@ -470,6 +492,11 @@ void CLIApp::setTransitionDipSource(quint16 source){
 
 void CLIApp::setTransitionMixFrames(quint8 frames){
     m_mixEffect->setMixFrames(frames);
+}
+
+void CLIApp::setTransitionNextKey(quint8 keyer, bool state){
+    // 0 for background
+    m_mixEffect->setKeyOnNextTransition(keyer, state);
 }
 
 void CLIApp::setTransitionNextStyle(quint8 style){
@@ -723,7 +750,10 @@ void CLIApp::onMixEffectNextTransitionStyleChanged(quint8 me, quint8 style){
 }
 void CLIApp::onMixEffectKeyersOnNextTransitionChanged(quint8 me, quint8 keyers){
     Q_UNUSED(me)
-    Q_UNUSED(keyers)
+    for(int i=0; i<5; i++){
+        qout << "TNEXTKEY " << i << ": " << ((keyers >> i)%2) << endl;
+    }
+    
 }
 void CLIApp::onMixEffectCurrentTransitionStyleChanged(quint8 me, quint8 style){
     Q_UNUSED(me)
@@ -731,7 +761,9 @@ void CLIApp::onMixEffectCurrentTransitionStyleChanged(quint8 me, quint8 style){
 }
 void CLIApp::onMixEffectKeyersOnCurrentTransitionChanged(quint8 me, quint8 keyers){
     Q_UNUSED(me)
-    Q_UNUSED(keyers)
+    for(int i=0; i<5; i++){
+        qout << "TCURRKEY " << i << ": " << ((keyers >> i)%2) << endl;
+    }
 }
 
 void CLIApp::onMixEffectFadeToBlackChanged(quint8 me, bool fading, bool enabled){

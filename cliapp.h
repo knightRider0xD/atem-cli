@@ -104,7 +104,7 @@ public:
     void getInputType(quint16 input);
     void getPreview();
     void getProgram();
-    //void getTransitionCurrentKey(QStringList cmd);
+    void getTransitionCurrentKey(quint8 keyer);
     void getTransitionCurrentStyle();
     void getTransitionDipFrames();
     void getTransitionDipSource();
@@ -117,7 +117,7 @@ public:
     //void getTallyState(QStringList cmd);
     void getTransitionMixFrames();
     //void getTransitionNextBackground(QStringList cmd);
-    //void getTransitionNextKey(QStringList cmd);
+    void getTransitionNextKey(quint8 keyer);
     void getTransitionNextStyle();
     void getTransitionPosition();
     void getTransitionPreview();
@@ -143,7 +143,6 @@ public:
     void setInputType(quint16 input, quint8 type);
     void setPreview(quint16 index);
     void setProgram(quint16 index);
-    //void setTransitionCurrentKey(QStringList cmd);
     //void setTransitionCurrentStyle(QStringList cmd);
     void setTransitionDipFrames(quint8 frames);
     void setTransitionDipSource(quint16 source);
@@ -155,7 +154,7 @@ public:
     //void setTallyState(QStringList cmd);
     void setTransitionMixFrames(quint8 frames);
     //void setTransitionNextBackground(QStringList cmd);
-    //void setTransitionNextKey(QStringList cmd);
+    void setTransitionNextKey(quint8 keyer, bool state);
     void setTransitionNextStyle(quint8 style);
     void setTransitionPosition(quint16 position);
     void setTransitionPreview(bool preview);
