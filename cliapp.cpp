@@ -527,6 +527,7 @@ void CLIApp::onAtemConnected()
     m_downstreamKey = m_atemConnection->downstreamKey(0);
     
     connectMixEffectEvents();
+    connectDSKeyerEvents();
     
     reader = new CLIReader(this,&qin);
     connect(reader, SIGNAL(cmdReady(QStringList)), this, SLOT(processCmd(QStringList)));
