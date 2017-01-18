@@ -23,50 +23,56 @@ Todo:
   * Tally
   
 To build run:
-`qmake`
-`make`
+```
+qmake  
+make
+```
 
 Usage:
-`COMMAND        {PREFIXES}              ARGUMENTS`
-`ACHNLS         {GET|HELP}`
-`AINBAL         {GET|SET}               INDEX BALANCE`
-`AINGAIN        {GET|SET}               INDEX GAIN`
-`AININFO        {GET}                   INDEX`
-`AINPEAK        {RESET}                 ALL|[INDEX1,...]`
-`AINSTATE       {GET|SET}               INDEX STATE`
-`ALVLS          {ENABLE|DISABLE|GET}    ALL|[INDEX1,...]`
-`AMSTRGAIN      {GET|SET}               GAIN`
-`AMSTRLVL       {GET}`
-`AMSTRPEAK      {RESET}`
-`AUXSRC         {GET|SET|HELP}          AUXCHNL INDEX`
-`CLRGENC        {GET|SET}               GENERATOR R G B`
-`CONN           {START|STOP|GET}`
-`CUT            {DO}`
-`DEBUG          {ENABLE|DISABLE|GET}`
-`FTB            {DO|UNDO|TOGGLE|GET}`
-`FTBFRAMES      {GET|SET}               INDEX`
-`FTBFRAMESLEFT  {GET}                   INDEX`
-`FTBLIVE        {GET}                   INDEX`
-`ININFO         {GET}                   INDEX`
-`INNAMEL        {GET|SET}               INDEX NAME`
-`INNAMES        {GET|SET}               INDEX NAME`
-`INTYPE         {GET|SET}               INDEX TYPE`
-`PREV           {GET|SET|HELP}          INDEX`
-`PROG           {GET|SET|HELP}          INDEX`
-`SETTINGS       {SAVE|CLEAR}            YES`
-`TCURRKEY       {GET}                   ALL|INDEX`
-`TCURRSTYLE     {GET}`
-`TDIPFRAMES     {GET|SET}               FRAMES`
-`TDIPSRC        {GET|SET}               SOURCE`
-`TFRAMES        {GET}                   INDEX`
-`TMIXFRAMES     {GET|SET}               FRAMES`
-`TNEXTKEY       {GET|SET}               ALL|INDEX STATE`
-`TNEXTSTYLE     {GET|SET}               STYLE`
-`TPOS           {GET|SET}               POSITION`
-`TPREV          {ENABLE|DISABLE|GET}`
-`TRANS          {DO}` 
-`VDOWNCONTYPE   {GET|SET}               MODE`
-`VFMT           {GET|SET|HELP}          FORMAT`
+```
+COMMAND        {PREFIXES}              ARGUMENTS  
+ACHNLS         {GET|HELP}   
+AINBAL         {GET|SET}               INDEX BALANCE  
+AINGAIN        {GET|SET}               INDEX GAIN  
+AININFO        {GET}                   INDEX  
+AINPEAK        {RESET}                 ALL|[INDEX1,...]  
+AINSTATE       {GET|SET}               INDEX STATE  
+ALVLS          {ENABLE|DISABLE|GET}    ALL|[INDEX1,...]  
+AMSTRGAIN      {GET|SET}               GAIN  
+AMSTRLVL       {GET}  
+AMSTRPEAK      {RESET}  
+AUXSRC         {GET|SET|HELP}          AUXCHNL INDEX  
+CLRGENC        {GET|SET}               GENERATOR R G B  
+CONN           {START|STOP|GET}  
+CUT            {DO}  
+DEBUG          {ENABLE|DISABLE|GET} 
+FTB            {DO|UNDO|TOGGLE|GET}  
+FTBFRAMES      {GET|SET}               INDEX  
+FTBFRAMESLEFT  {GET}                   INDEX  
+FTBLIVE        {GET}                   INDEX  
+ININFO         {GET}                   INDEX  
+INNAMEL        {GET|SET}               INDEX NAME  
+INNAMES        {GET|SET}               INDEX NAME  
+INTYPE         {GET|SET}               INDEX TYPE  
+PREV           {GET|SET|HELP}          INDEX  
+PROG           {GET|SET|HELP}          INDEX  
+SETTINGS       {SAVE|CLEAR}            YES  
+TCURRKEY       {GET}                   ALL|INDEX  
+TCURRSTYLE     {GET}  
+TDIPFRAMES     {GET|SET}               FRAMES  
+TDIPSRC        {GET|SET}               SOURCE  
+TFRAMES        {GET}                   INDEX  
+TMIXFRAMES     {GET|SET}               FRAMES  
+TNEXTKEY       {GET|SET}               ALL|INDEX STATE  
+TNEXTSTYLE     {GET|SET}               STYLE  
+TPOS           {GET|SET}               POSITION  
+TPREV          {ENABLE|DISABLE|GET}  
+TRANS          {DO}  
+VDOWNCONTYPE   {GET|SET}               MODE  
+VFMT           {GET|SET|HELP}          FORMAT
+```
 
 Example:
-`AINBAL SET 1 0`
+```
+AINBAL SET 1 0
+```
