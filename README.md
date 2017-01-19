@@ -1,7 +1,11 @@
 # atem-cli
-Commandline utility for controlling Blackmagic ATEM Switchers based on libqatem
+Commandline utility for controlling Blackmagic ATEM Switchers based on libqatem.
 
-Working:
+This tool was designed primarily for use as a way to allow programs written in languages other than C++ to work with ATEM Switchers .
+
+## Current State
+
+### Working:
 
   * Change Program, Preview, Aux
   * Fade, Cut, Dip transitions
@@ -13,22 +17,24 @@ Working:
   * Get/set output resolution/framerate & HD-SDI down-conversion format
   * Save and Clear Settings
 
-In progress:
+### In progress:
 
   * Enable/disable/check upstream keyers on air; 
 
-Todo:
+### Todo:
 
   * Get/set Keyer settings
   * Tally
-  
-To build run:
+
+## Building and Usage
+
+### To build run:
 ```
 qmake  
 make
 ```
 
-Usage:
+### Usage:
 ```
 COMMAND        {PREFIXES}              ARGUMENTS  
 ACHNLS         {GET|HELP}   
@@ -72,7 +78,13 @@ VDOWNCONTYPE   {GET|SET}               MODE
 VFMT           {GET|SET|HELP}          FORMAT
 ```
 
-Example:
-```
-AINBAL SET 1 0
-```
+### Examples:
+  * `AINBAL SET 1 0`  
+Would set the balance on the audio mixer for input 1 (HDMI/SDI 1 on 1 M/E Production Studio 4K) to 0 (centre)
+
+  * `PROG GET`  
+Would get the input number of the currently selected input for PROGRAM
+
+### References:
+  * [libqatemcontrol](https://github.com/petersimonsson/libqatemcontrol) for details on the protocol implementation used here.
+  * [SKAARHOJ BlackMagic ATEM Switcher Protocol Documentation](http://skaarhoj.com/fileadmin/BMDPROTOCOL.html) for details on the ATEM protocol and expected I/O values used here.
