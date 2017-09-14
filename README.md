@@ -19,7 +19,9 @@ This tool was designed primarily for use as a way to allow programs written in l
 
 ### In progress:
 
-  * Enable/disable/check upstream keyers on air; 
+  * Enable/disable/check upstream keyers on air
+  * Enable/disable/check downstream keyers for next & current transition
+  * Enable/disable/check downstream keyers on air
 
 ### Todo:
 
@@ -37,6 +39,7 @@ make
 ### Usage:
 ```
 COMMAND        {PREFIXES}              ARGUMENTS  
+────────────────────────────────────────────────────────
 ACHNLS         {GET|HELP}   
 AINBAL         {GET|SET}               INDEX BALANCE  
 AINGAIN        {GET|SET}               INDEX GAIN  
