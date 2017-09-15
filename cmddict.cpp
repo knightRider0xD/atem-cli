@@ -309,13 +309,47 @@ struct CmdTrieNode cmdT = {&CmdDict::invalid,{A0, B0, C0/*&cmdTC*/, &cmdTD, E0, 
 struct CmdTrieNode cmdV = {&CmdDict::invalid,{A0, B0, C0, &cmdVD, E0, &cmdVF, G0, H0, I0, J0, K0, L0, M0, N0, O0, P0, Q0, R0, S0, T0, U0, V0, W0, X0, Y0, Z0}};
 //struct CmdTrieNode cmdX = {&CmdDict::invalid,{A0, B0, C0, D0, E0, F0, G0, H0, I0, J0, K0, L0, M0, N0, O0, P0, Q0, R0, S0, T0, U0, V0, W0, X0, Y0, Z0}};
 /* Root Node */
-struct CmdTrieNode cmdRoot = {&CmdDict::invalid,{&cmdA, B0, &cmdC, &cmdD, E0, &cmdF, G0, H0, &cmdI, J0, K0, L0, M0, N0, O0, &cmdP, Q0, R0, &cmdS, &cmdT, U0, &cmdV, W0, X0, Y0, Z0}};
+//struct CmdTrieNode cmdRoot = {&CmdDict::invalid,{&cmdA, B0, &cmdC, &cmdD, E0, &cmdF, G0, H0, &cmdI, J0, K0, L0, M0, N0, O0, &cmdP, Q0, R0, &cmdS, &cmdT, U0, &cmdV, W0, X0, Y0, Z0}};
+struct CmdTrieNode cmdRoot = {};
 
 struct CmdTrieNode * CmdDict::cmdTrieRoot = &cmdRoot;
 CLIApp * CmdDict::app = NULL;
 
 CmdDict::CmdDict(CLIApp * app){
     this->app = app;
+}
+
+
+/**
+ * Adds new command and corresponding handler to Trie 
+ */
+void CmdDict::defineCommand(QString cmd_name, void (*handler)(QStringList)){
+
+    QString key = cmd_name.toUpper(); //extract key that Trie traverses
+    
+    
+    struct CmdTrieNode * node = cmdTrieRoot;
+    for(int i = 0; i < key.size(); i++) {
+        
+        int charIndex = (int)(key.at(i).toLatin1())-(int)('A'); // Take character at current position and convert to a value from 0-25
+        if(charIndex<0 || charIndex > 25){
+            // If invalid character, run invalid function & return.
+            invalid(cmd);
+            return;
+        }
+        
+        struct CmdTrieNode * next = node->nextChar[charIndex];
+        if(next == NULL){
+            // If no node exists for current position in trie, create new node and continue.
+            next = new CmdTrieNode();
+            node->nextChar[charIndex] = next;
+        }
+        node = next;
+
+    }
+    
+    node->currentCmd = handler;
+    
 }
 
 /**

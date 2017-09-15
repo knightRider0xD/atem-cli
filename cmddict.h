@@ -31,6 +31,7 @@ class CmdDict {
     
 public:
     CmdDict(CLIApp * app);
+    static void defineCommand(QString cmd_name, void (*handler)(QStringList));
     static void parseCommand(QStringList cmd);
     
     static struct CmdTrieNode * cmdTrieRoot;

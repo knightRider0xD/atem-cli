@@ -71,7 +71,8 @@ void CLIApp::processCmd(QStringList cmd){
 void CLIApp::help(){
     qout << "\n"
     "        ~ CLI for Blackmagic ATEM Switchers ~\n"
-    "Commands:         {PREFIXES}              ARGUMENTS \n"
+    "   COMMAND        {PREFIXES}              ARGUMENTS\n"
+    "   ─────────────────────────────────────────────────────────\n"
     "   ACHNLS         {GET|HELP}\n"                                     //done
     "   AINBAL         {GET|SET}               INDEX BALANCE\n"     //done
     "   AINGAIN        {GET|SET}               INDEX GAIN\n"        //done
@@ -125,10 +126,8 @@ void CLIApp::help(){
 void CLIApp::helpVSrc(){
     qout << "\n"
     "Video Source IDs: (Not All Available on all Models)\n"
-    "   [0] =>         Black\n"
-    "   [1] =>         Input 1\n"
-    "   ...\n"
-    "   [20]           Input 20\n"
+    "   [0]            Black\n"
+    "   [1-20]         Inputs 1-20\n"
     "   [1000]         Color Bars\n"
     "   [2001]         Color 1\n"
     "   [2002]         Color 2\n"
@@ -145,9 +144,7 @@ void CLIApp::helpVSrc(){
     "   [6000]         Super Source\n"
     "   [7001]         Clean Feed 1\n"
     "   [7002]         Clean Feed 2\n"
-    "   [8001]         Auxilary 1\n"
-    "   ...\n"
-    "   [8006]         Auxilary 6\n"
+    "   [8001-8006]    Aux Outputs 1-6\n"
     "   [10010]        ME 1 Prog\n"
     "   [10011]        ME 1 Prev\n"
     "   [10020]        ME 2 Prog\n"
@@ -157,9 +154,7 @@ void CLIApp::helpVSrc(){
 void CLIApp::helpASrc(){
     qout << "\n"
     "Audio Source IDs: (Not All Available on all Models)\n"
-    "   [1]            Input 1\n"
-    "   ...\n"
-    "   [20]           Input 20\n"
+    "   [1-20]         Inputs 1-20\n"
     "   [1001]         XLR\n"
     "   [1101]         AES/EBU\n"
     "   [1201]         RCA\n"
