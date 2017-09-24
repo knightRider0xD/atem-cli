@@ -1,5 +1,5 @@
 /*
-Copyright 2015  Ian Knight <ian@knightly.xyz>
+Copyright 2017  Ian Knight <ian@knightly.xyz>
 
 This file is part of atem-cli.
 
@@ -8,7 +8,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Foobar is distributed in the hope that it will be useful,
+atem-cli is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -50,6 +50,10 @@ CmdDict::CmdDict(CLIApp * app){
     CmdDict::defineCommand("CONN", &CmdDict::preConnection);
     CmdDict::defineCommand("CUT", &CmdDict::preCut);
     CmdDict::defineCommand("DEBUG", &CmdDict::preDebug);
+    //CmdDict::defineCommand("DSK", &CmdDict::preDebug);
+    //CmdDict::defineCommand("DSKTIE", &CmdDict::preDebug);
+    //CmdDict::defineCommand("DSKAUTO", &CmdDict::preDebug);
+    //CmdDict::defineCommand("DSKARATE", &CmdDict::preDebug);
     CmdDict::defineCommand("FTB", &CmdDict::preFadeToBlack);
     CmdDict::defineCommand("FTBFRAMES", &CmdDict::preFadeToBlackFrames);
     CmdDict::defineCommand("FTBFRAMESLEFT", &CmdDict::preFadeToBlackFramesLeft);
@@ -99,8 +103,7 @@ void CmdDict::defineCommand(QString cmd_name, void (*handler)(QStringList)){
         
         int charIndex = (int)(key.at(i).toLatin1())-(int)('A'); // Take character at current position and convert to a value from 0-25
         if(charIndex<0 || charIndex > 25){
-            // If invalid character, run invalid function & return.
-            invalid(cmd);
+            // If invalid character return.
             return;
         }
         
