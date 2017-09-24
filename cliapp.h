@@ -54,7 +54,8 @@ private:
     QTextStream qout;
     QHostAddress atem_address;
     QAtemMixEffect *m_mixEffect;
-    QAtemDownstreamKey *m_downstreamKey;
+    QAtemDownstreamKey *m_downstreamKey_0;
+    QAtemDownstreamKey *m_downstreamKey_1;
     QAtemConnection *m_atemConnection;
     CLIReader *reader;
     
@@ -79,6 +80,7 @@ public:
     
     void doCut();
     void doAutoTransition();
+    void doDSKeyAuto(quint8 keyer);
     
     void saveSettings();
     void clearSettings();
@@ -96,6 +98,9 @@ public:
     void getColorGeneratorColor(quint8 generator);
     void getConnection();
     void getDebug();
+    void getDSKeyLive(quint8 keyer);
+    void getDSKeyAutoFrameRate(quint8 keyer);
+    void getDSKeyTie(quint8 keyer);
     void getFadeToBlack();
     void getFadeToBlackFading();
     void getFadeToBlackFrames();
@@ -137,6 +142,9 @@ public:
     void setColorGeneratorColor(quint8 generator, quint8 red, quint8 green, quint8 blue);
     void setConnection(bool enable);
     void setDebug(bool enable);
+    void setDSKeyLive(quint8 keyer, bool enable); //0 = Off, 1 = On
+    void setDSKeyAutoFrameRate(quint8 keyer, quint8 rate); //value 0-250
+    void setDSKeyTie(quint8 keyer, bool enable); //0 = Off, 1 = On
     void setFadeToBlack(bool ftb);
     void toggleFadeToBlack();
     void setFadeToBlackFrames(quint8 frames);

@@ -57,6 +57,10 @@ public:
     static void preConnection(QStringList cmd);
     static void preCut(QStringList cmd);
     static void preDebug(QStringList cmd);
+    static void preDSKeyLive(QStringList cmd);
+    static void preDSKeyAuto(QStringList cmd);
+    static void preDSKeyAutoFrameRate(QStringList cmd);
+    static void preDSKeyTie(QStringList cmd);
     static void preFadeToBlack(QStringList cmd);
     static void preFadeToBlackFrames(QStringList cmd);
     static void preFadeToBlackFramesLeft(QStringList cmd);

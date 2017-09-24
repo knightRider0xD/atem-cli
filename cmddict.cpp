@@ -50,10 +50,10 @@ CmdDict::CmdDict(CLIApp * app){
     CmdDict::defineCommand("CONN", &CmdDict::preConnection);
     CmdDict::defineCommand("CUT", &CmdDict::preCut);
     CmdDict::defineCommand("DEBUG", &CmdDict::preDebug);
-    //CmdDict::defineCommand("DSK", &CmdDict::preDebug);
-    //CmdDict::defineCommand("DSKTIE", &CmdDict::preDebug);
-    //CmdDict::defineCommand("DSKAUTO", &CmdDict::preDebug);
-    //CmdDict::defineCommand("DSKARATE", &CmdDict::preDebug);
+    CmdDict::defineCommand("DSKEY", &CmdDict::preDSKeyLive);
+    CmdDict::defineCommand("DSKAUTO", &CmdDict::preDSKeyAuto);
+    CmdDict::defineCommand("DSKARATE", &CmdDict::preDSKeyAutoFrameRate);
+    CmdDict::defineCommand("DSKTIE", &CmdDict::preDSKeyTie);
     CmdDict::defineCommand("FTB", &CmdDict::preFadeToBlack);
     CmdDict::defineCommand("FTBFRAMES", &CmdDict::preFadeToBlackFrames);
     CmdDict::defineCommand("FTBFRAMESLEFT", &CmdDict::preFadeToBlackFramesLeft);
@@ -449,6 +449,79 @@ void CmdDict::preDebug(QStringList cmd){
             invalid(cmd);
         } else {
             app->setDebug(false);
+        }
+    } else {
+        invalid(cmd);
+    }
+}
+
+
+void CmdDict::preDSKeyLive(QStringList cmd){
+    if(cmd[0].toUpper()=="GET"){
+        if(cmd.size()!= 3){
+            invalid(cmd);
+        } else {
+            if(cmd[2].toUpper()=="ALL"){
+                cmd[2] = "255";
+            }
+            app->getDSKeyLive((quint8)cmd[2].toInt());
+        }
+    } else if(cmd[0].toUpper()=="SET"){
+        if(cmd.size()!= 4){
+            invalid(cmd);
+        } else {
+            app->setDSKeyLive((quint8)cmd[2].toInt(),(bool)cmd[3].toInt()); //0 = Off, 1 = On
+        }
+    } else {
+        invalid(cmd);
+    }
+}
+
+void CmdDict::preDSKeyAuto(QStringList cmd){
+    if(cmd[0].toUpper()=="DO"){
+        if(cmd.size()!= 3){
+            invalid(cmd);
+        } else {
+            app->doDSKeyAuto((quint8)cmd[2].toInt());
+        }
+    } else {
+        invalid(cmd);
+    }
+}
+
+void CmdDict::preDSKeyAutoFrameRate(QStringList cmd){
+    if(cmd[0].toUpper()=="GET"){
+        if(cmd.size()!= 3){
+            invalid(cmd);
+        } else {
+            app->getDSKeyAutoFrameRate((quint8)cmd[2].toInt());
+        }
+    } else if(cmd[0].toUpper()=="SET"){
+        if(cmd.size()!= 4){
+            invalid(cmd);
+        } else {
+            app->setDSKeyAutoFrameRate((quint8)cmd[2].toInt(),(quint8)cmd[3].toInt()); //value 0-250
+        }
+    } else {
+        invalid(cmd);
+    }
+}
+
+void CmdDict::preDSKeyTie(QStringList cmd){
+    if(cmd[0].toUpper()=="GET"){
+        if(cmd.size()!= 3){
+            invalid(cmd);
+        } else {
+            if(cmd[2].toUpper()=="ALL"){
+                cmd[2] = "255";
+            }
+            app->getDSKeyTie((quint8)cmd[2].toInt());
+        }
+    } else if(cmd[0].toUpper()=="SET"){
+        if(cmd.size()!= 4){
+            invalid(cmd);
+        } else {
+            app->setDSKeyTie((quint8)cmd[2].toInt(),(bool)cmd[3].toInt()); //0 = Off, 1 = On
         }
     } else {
         invalid(cmd);
