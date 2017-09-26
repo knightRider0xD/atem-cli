@@ -188,7 +188,7 @@ public slots:
     void onAtemDownstreamKeyOnChanged(quint8 keyer, bool state);
     void onAtemDownstreamKeyTieChanged(quint8 keyer, bool state);
     void onAtemDownstreamKeyFrameCountChanged(quint8 keyer, quint8 count);
-    void onAtemDownstreamKeyFramesChanged(quint8 keyer, quint8 frames);
+    void onAtemDownstreamKeyFrameRateChanged(quint8 keyer, quint8 frames);
     void onAtemDownstreamKeySourcesChanged(quint8 keyer, quint16 fill, quint16 key);
     void onAtemDownstreamKeyInvertKeyChanged(quint8 keyer, bool invert);
     void onAtemDownstreamKeyPreMultipliedChanged(quint8 keyer, bool preMultiplied);

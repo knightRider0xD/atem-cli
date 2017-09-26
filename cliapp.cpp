@@ -290,33 +290,33 @@ void CLIApp::getDebug(){
     qout << "DEBUG: "<< m_atemConnection->debugEnabled() << endl;
 }
 
-void getDSKeyLive(quint8 keyer){
+void CLIApp::getDSKeyLive(quint8 keyer){
     if (keyer==0){
-        qout << "DSKEY: 0 "<< m_downstreamKey_0->onAir() << endl;
+        qout << "DSKEY: [ 0 ] "<< m_downstreamKey_0->onAir() << endl;
     } else if (keyer==1){
-        qout << "DSKEY: 1 "<< m_downstreamKey_1->onAir() << endl;
+        qout << "DSKEY: [ 1 ] "<< m_downstreamKey_1->onAir() << endl;
     } else if (keyer==255){
-        qout << "DSKEY: 0 "<< m_downstreamKey_0->onAir() << endl;
-        qout << "DSKEY: 1 "<< m_downstreamKey_1->onAir() << endl;
+        qout << "DSKEY: [ 0 ] "<< m_downstreamKey_0->onAir() << endl;
+        qout << "DSKEY: [ 1 ] "<< m_downstreamKey_1->onAir() << endl;
     }
 }
 
-void getDSKeyAutoFrameRate(quint8 keyer){
+void CLIApp::getDSKeyAutoFrameRate(quint8 keyer){
     if (keyer==0){
-        qout << "DSKARATE: 0 "<< m_downstreamKey_0->frameRate() << endl;
+        qout << "DSKARATE: [ 0 ] "<< m_downstreamKey_0->frameRate() << endl;
     } else if (keyer==1){
-        qout << "DSKARATE: 1 "<< m_downstreamKey_1->frameRate() << endl;
+        qout << "DSKARATE: [ 1 ] "<< m_downstreamKey_1->frameRate() << endl;
     }
 }
 
-void getDSKeyTie(quint8 keyer){
+void CLIApp::getDSKeyTie(quint8 keyer){
     if (keyer==0){
-        qout << "DSKTIE: 0 "<< m_downstreamKey_0->tie() << endl;
+        qout << "DSKTIE: [ 0 ] "<< m_downstreamKey_0->tie() << endl;
     } else if (keyer==1){
-        qout << "DSKTIE: 1 "<< m_downstreamKey_1->tie() << endl;
+        qout << "DSKTIE: [ 1 ] "<< m_downstreamKey_1->tie() << endl;
     } else if (keyer==255){
-        qout << "DSKTIE: 0 "<< m_downstreamKey_0->tie() << endl;
-        qout << "DSKTIE: 1 "<< m_downstreamKey_1->tie() << endl;
+        qout << "DSKTIE: [ 0 ] "<< m_downstreamKey_0->tie() << endl;
+        qout << "DSKTIE: [ 1 ] "<< m_downstreamKey_1->tie() << endl;
     }
 }
 
@@ -480,23 +480,23 @@ void CLIApp::setDebug(bool enable){
     m_atemConnection->setDebugEnabled(enable);
 }
 
-void setDSKeyLive(quint8 keyer, bool enable){
+void CLIApp::setDSKeyLive(quint8 keyer, bool enable){
     if (keyer==0){
         if(enable==m_downstreamKey_0->onAir()){
-            qout << "DSKEY: 0 "<< m_downstreamKey_0->onAir() << endl;
+            qout << "DSKEY: [ 0 ] "<< m_downstreamKey_0->onAir() << endl;
         } else {
             m_downstreamKey_0->setOnAir(enable);
         }
     } else if (keyer==1){
         if(enable==m_downstreamKey_1->onAir()){
-            qout << "DSKEY: 1 "<< m_downstreamKey_1->onAir() << endl;
+            qout << "DSKEY: [ 1 ] "<< m_downstreamKey_1->onAir() << endl;
         } else {
             m_downstreamKey_1->setOnAir(enable);
         }
     }
 }
 
-void setDSKeyAutoFrameRate(quint8 keyer, quint8 rate){ //value 0-250
+void CLIApp::setDSKeyAutoFrameRate(quint8 keyer, quint8 rate){ //value 0-250
     if (keyer==0){
         m_downstreamKey_0->setFrameRate(rate);
     } else if (keyer==1){
@@ -504,7 +504,7 @@ void setDSKeyAutoFrameRate(quint8 keyer, quint8 rate){ //value 0-250
     }
 }
 
-void setDSKeyTie(quint8 keyer, bool enable){
+void CLIApp::setDSKeyTie(quint8 keyer, bool enable){
     if (keyer==0){
         m_downstreamKey_0->setTie(enable);
     } else if (keyer==1){
@@ -629,11 +629,11 @@ void CLIApp::onAtemSwitcherWarning(const QString &warningString){
 void CLIApp::onAtemTallyStatesChanged(){}
 
 void CLIApp::onAtemDownstreamKeyOnChanged(quint8 keyer, bool state){
-    qout << "DSKEY: " << keyer << " " << state << endl;
+    qout << "DSKEY: [ " << keyer << " ] " << state << endl;
 }
 
 void CLIApp::onAtemDownstreamKeyTieChanged(quint8 keyer, bool state){
-    qout << "DSKTIE: " << keyer << " " << state << endl;
+    qout << "DSKTIE: [ " << keyer << " ] " << state << endl;
 }
 
 void CLIApp::onAtemDownstreamKeyFrameCountChanged(quint8 keyer, quint8 count){
@@ -642,7 +642,7 @@ void CLIApp::onAtemDownstreamKeyFrameCountChanged(quint8 keyer, quint8 count){
 }
 
 void CLIApp::onAtemDownstreamKeyFrameRateChanged(quint8 keyer, quint8 frames){
-    qout << "DSKARATE: " << keyer << " " << frames << endl;
+    qout << "DSKARATE: [ " << keyer << " ] " << frames << endl;
 }
 
 void CLIApp::onAtemDownstreamKeySourcesChanged(quint8 keyer, quint16 fill, quint16 key){
@@ -683,10 +683,19 @@ void CLIApp::onAtemColorGeneratorColorChanged(quint8 generator, const QColor& co
     qout << "CLRGEN: [ "<<generator<<" ] " << color.red() << " " << color.green() << " " << color.blue() << endl;
 }
 
-void CLIApp::onAtemMediaPlayerChanged(quint8 player, quint8 type, quint8 still, quint8 clip){}
-void CLIApp::onAtemMediaPlayerStateChanged(quint8 player, const QAtem::MediaPlayerState& state){}
+void CLIApp::onAtemMediaPlayerChanged(quint8 player, quint8 type, quint8 still, quint8 clip){
+    Q_UNUSED(player)
+    Q_UNUSED(type)
+    Q_UNUSED(still)
+    Q_UNUSED(clip)
+}
+void CLIApp::onAtemMediaPlayerStateChanged(quint8 player, const QAtem::MediaPlayerState& state){
+    Q_UNUSED(player)
+    Q_UNUSED(state)
+}
 
 void CLIApp::onAtemAuxSourceChanged(quint8 aux, quint16 source){
+    Q_UNUSED(source)
     qout << "AUX: [ "<<aux<<" ] " << m_atemConnection->auxSource(aux) << endl;
 }
 
@@ -762,21 +771,48 @@ void CLIApp::onAtemAudioLevelsChanged(){
     }
 }
 
-void CLIApp::onAtemMediaLockStateChanged(quint8 id, bool state){}
-void CLIApp::onAtemGetLockStateChanged(quint8 storeId, bool state){}
+void CLIApp::onAtemMediaLockStateChanged(quint8 id, bool state){
+    Q_UNUSED(id)
+    Q_UNUSED(state)
+}
+void CLIApp::onAtemGetLockStateChanged(quint8 storeId, bool state){
+    Q_UNUSED(storeId)
+    Q_UNUSED(state)
+}
 
-void CLIApp::onAtemDataTransferFinished(quint16 transferId){}
+void CLIApp::onAtemDataTransferFinished(quint16 transferId){
+    Q_UNUSED(transferId)
+}
 
-void CLIApp::onAtemTopologyChanged(const QAtem::Topology &topology){}
+void CLIApp::onAtemTopologyChanged(const QAtem::Topology &topology){
+    Q_UNUSED(topology)
+}
 
-void CLIApp::onAtemPowerStatusChanged(quint8 status){}
+void CLIApp::onAtemPowerStatusChanged(quint8 status){
+    Q_UNUSED(status)
+}
 
-void CLIApp::onAtemMultiViewLayoutChanged(quint8 multiView, quint8 layout){}
-void CLIApp::onAtemMultiViewInputsChanged(quint8 multiView){}
+void CLIApp::onAtemMultiViewLayoutChanged(quint8 multiView, quint8 layout){
+    Q_UNUSED(multiView)
+    Q_UNUSED(layout)
+}
+void CLIApp::onAtemMultiViewInputsChanged(quint8 multiView){
+    Q_UNUSED(multiView)
+}
 
-void CLIApp::onAtemMacroInfoChanged(quint8 index, const QAtem::MacroInfo &info){}
-void CLIApp::onAtemMacroRunningStateChanged(QAtem::MacroRunningState running, bool repeating, quint8 macroIndex){}
-void CLIApp::onAtemMacroRecordingStateChanged(bool recording, quint8 macroIndex){}
+void CLIApp::onAtemMacroInfoChanged(quint8 index, const QAtem::MacroInfo &info){
+    Q_UNUSED(index)
+    Q_UNUSED(info)
+}
+void CLIApp::onAtemMacroRunningStateChanged(QAtem::MacroRunningState running, bool repeating, quint8 macroIndex){
+    Q_UNUSED(running)
+    Q_UNUSED(repeating)
+    Q_UNUSED(macroIndex)
+}
+void CLIApp::onAtemMacroRecordingStateChanged(bool recording, quint8 macroIndex){
+    Q_UNUSED(recording)
+    Q_UNUSED(macroIndex)
+}
 
 
 
@@ -807,6 +843,7 @@ void CLIApp::onMixEffectTransitionPositionChanged(quint8 me, quint16 count){
 }
 void CLIApp::onMixEffectNextTransitionStyleChanged(quint8 me, quint8 style){
     Q_UNUSED(me)
+    Q_UNUSED(style)
     qout << "TNEXTSTYLE: " << m_mixEffect->nextTransitionStyle() << endl;
 }
 void CLIApp::onMixEffectKeyersOnNextTransitionChanged(quint8 me, quint8 keyers){
@@ -982,6 +1019,7 @@ void CLIApp::onMixEffectStingerMixRateChanged(quint8 me, quint16 frames){
 void CLIApp::onMixEffectUpstreamKeyOnAirChanged(quint8 me, quint8 keyer, bool state){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(state)
 }
 void CLIApp::onMixEffectUpstreamKeyTypeChanged(quint8 me, quint8 keyer, quint8 type){
     Q_UNUSED(me)
