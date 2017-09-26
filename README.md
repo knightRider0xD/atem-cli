@@ -82,10 +82,10 @@ VFMT           {GET|SET|HELP}          FORMAT
 ```
 
 ### Examples:
-  * `AINBAL SET 1 0`  
+  * `SET AINBAL 1 0`  
 Would set the balance on the audio mixer for input 1 (HDMI/SDI 1 on 1 M/E Production Studio 4K) to 0 (centre)
 
-  * `PROG GET`  
+  * `GET PROG`  
 Would get the input number of the currently selected input for PROGRAM
 
 ### References:
