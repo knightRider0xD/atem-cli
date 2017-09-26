@@ -88,6 +88,10 @@ void CLIApp::help(){
     "   CONN           {START|STOP|GET}\n"                          //done
     "   CUT            {DO}\n"                                      //done
     "   DEBUG          {ENABLE|DISABLE|GET}\n"                      //done
+    "   DSKEY          {GET|SET}               ALL|KEYER STATE\n"   //done
+    "   DSKAUTO        {DO}                    KEYER\n"             //done
+    "   DSKARATE       {GET|SET}               KEYER FRAMERATE\n"   //done
+    "   DSKTIE         {GET|SET}               ALL|KEYER STATE\n"   //done
     "   FTB            {DO|UNDO|TOGGLE|GET}\n"                      //done
     "   FTBFRAMES      {GET|SET}               INDEX\n"             //done
     "   FTBFRAMESLEFT  {GET}                   INDEX\n"             //done

@@ -55,6 +55,10 @@ CLRGENC        {GET|SET}               GENERATOR R G B
 CONN           {START|STOP|GET}  
 CUT            {DO}  
 DEBUG          {ENABLE|DISABLE|GET} 
+DSKEY          {GET|SET}               ALL|KEYER STATE
+DSKAUTO        {DO}                    KEYER
+DSKARATE       {GET|SET}               KEYER FRAMERATE
+DSKTIE         {GET|SET}               ALL|KEYER STATE
 FTB            {DO|UNDO|TOGGLE|GET}  
 FTBFRAMES      {GET|SET}               INDEX  
 FTBFRAMESLEFT  {GET}                   INDEX  
