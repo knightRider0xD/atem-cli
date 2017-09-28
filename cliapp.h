@@ -53,11 +53,11 @@ private:
     QTextStream qin;
     QTextStream qout;
     QHostAddress atem_address;
-    QAtemMixEffect *m_mixEffect;
-    QAtemDownstreamKey *m_downstreamKey_0;
-    QAtemDownstreamKey *m_downstreamKey_1;
-    QAtemConnection *m_atemConnection;
-    CLIReader *reader;
+    QAtemMixEffect *m_mixEffect             = NULL;
+    QAtemDownstreamKey *m_downstreamKey_0   = NULL;
+    QAtemDownstreamKey *m_downstreamKey_1   = NULL;
+    QAtemConnection *m_atemConnection       = NULL;
+    CLIReader *reader                       = NULL;
     
     QList<quint16> aLvlUpdateList;
     

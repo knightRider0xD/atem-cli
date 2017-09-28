@@ -592,12 +592,17 @@ void CLIApp::onAtemConnected()
 {
     reconnect = true;
     qout << "Connected" << endl;
-    m_mixEffect = m_atemConnection->mixEffect(0);
-    m_downstreamKey_0 = m_atemConnection->downstreamKey(0);
-    m_downstreamKey_1 = m_atemConnection->downstreamKey(1);
     
-    connectMixEffectEvents();
-    connectDSKeyerEvents();
+    if (!m_mixEffect){
+        m_mixEffect = m_atemConnection->mixEffect(0);
+        connectMixEffectEvents();
+    }
+    
+    if (!m_downstreamKey_0){
+        m_downstreamKey_0 = m_atemConnection->downstreamKey(0);
+        m_downstreamKey_1 = m_atemConnection->downstreamKey(1);
+        connectDSKeyerEvents();
+    }
     
     reader = new CLIReader(this,&qin);
     connect(reader, SIGNAL(cmdReady(QStringList)), this, SLOT(processCmd(QStringList)));
@@ -609,9 +614,11 @@ void CLIApp::onAtemConnected()
 
 void CLIApp::onAtemDisconnected()
 {
-    
-    reader->terminate();
-    delete reader;
+    if (reader){
+        reader->terminate();
+        delete reader;
+        reader = NULL;
+    }
     
     if(!reconnect){
         qout << "Disconnected ... Exiting";
