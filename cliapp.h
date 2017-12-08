@@ -1,5 +1,5 @@
 /*
-Copyright 2015  Ian Knight <ian@knightly.xyz>
+Copyright 2017  Ian Knight <ian@knightly.xyz>
 
 This file is part of atem-cli.
 
@@ -8,7 +8,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Foobar is distributed in the hope that it will be useful,
+atem-cli is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -24,6 +24,7 @@ along with atem-cli.  If not, see <http://www.gnu.org/licenses/>.
 #include <QObject>
 #include <QTextStream>
 #include <QHostAddress>
+#include <QTimer>
 #include "qatemtypes.h"
 #include "qatemmixeffect.h"
 #include "qatemconnection.h"
@@ -50,6 +51,7 @@ class CLIApp : public QObject
     Q_OBJECT
 private:
     bool reconnect = true;
+    QTimer *quit_timer;
     QTextStream qin;
     QTextStream qout;
     QHostAddress atem_address;
@@ -61,12 +63,14 @@ private:
     
     QList<quint16> aLvlUpdateList;
     
+    void quit_final();
     void connectAtemEvents(); 
     void connectDSKeyerEvents();
     void connectMixEffectEvents();
     
 public:
     CLIApp(QObject *parent = 0, QString address = QString("192.168.10.240")) : QObject(parent), qin(stdin), qout(stdout){ if(!atem_address.setAddress(address)){emit finished();} }
+    int currentAccess = 0;
     
     //void printStatus();
     

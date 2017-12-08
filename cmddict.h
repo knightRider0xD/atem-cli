@@ -20,10 +20,15 @@ along with atem-cli.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CMDDICT_H
 #define CMDDICT_H
 
+#define DISABLED 0
+#define ENABLE_ALWAYS 1
+#define ENABLE_CONNECTED 2
+
 #include "cliapp.h"
 
 struct CmdTrieNode {
     void (*currentCmd)(QStringList);
+    int cmdAccess;
     CmdTrieNode * nextChar[26];
 };
 
@@ -31,7 +36,7 @@ class CmdDict {
     
 public:
     CmdDict(CLIApp * app);
-    static void defineCommand(QString cmd_name, void (*handler)(QStringList));
+    static void defineCommand(QString cmd_name, void (*handler)(QStringList), int cmd_access);
     static void parseCommand(QStringList cmd);
     
     static struct CmdTrieNode * cmdTrieRoot;

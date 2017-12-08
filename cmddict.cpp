@@ -35,57 +35,62 @@ CLIApp * CmdDict::app = NULL;
 CmdDict::CmdDict(CLIApp * app){
     this->app = app;
     
-    CmdDict::defineCommand("ACHNLS", &CmdDict::preAudioChannelCount);
-    CmdDict::defineCommand("AINBAL", &CmdDict::preAudioInBalance);
-    CmdDict::defineCommand("AINGAIN", &CmdDict::preAudioInGain);
-    CmdDict::defineCommand("AININFO", &CmdDict::preAudioInInfo);
-    CmdDict::defineCommand("AINPEAK", &CmdDict::preAudioInPeak);
-    CmdDict::defineCommand("AINSTATE", &CmdDict::preAudioInState);
-    CmdDict::defineCommand("ALVLS", &CmdDict::preAudioLevels);
-    CmdDict::defineCommand("AMSTRGAIN", &CmdDict::preAudioMasterGain);
-    CmdDict::defineCommand("AMSTRLVL", &CmdDict::preAudioMasterLevels);
-    CmdDict::defineCommand("AMSTRPEAK", &CmdDict::preAudioMasterPeak);
-    CmdDict::defineCommand("AUXSRC", &CmdDict::preAuxSource);
-    CmdDict::defineCommand("CLRGENC", &CmdDict::preColorGeneratorColor);
-    CmdDict::defineCommand("CONN", &CmdDict::preConnection);
-    CmdDict::defineCommand("CUT", &CmdDict::preCut);
-    CmdDict::defineCommand("DEBUG", &CmdDict::preDebug);
-    CmdDict::defineCommand("DSKEY", &CmdDict::preDSKeyLive);
-    CmdDict::defineCommand("DSKAUTO", &CmdDict::preDSKeyAuto);
-    CmdDict::defineCommand("DSKARATE", &CmdDict::preDSKeyAutoFrameRate);
-    CmdDict::defineCommand("DSKTIE", &CmdDict::preDSKeyTie);
-    CmdDict::defineCommand("FTB", &CmdDict::preFadeToBlack);
-    CmdDict::defineCommand("FTBFRAMES", &CmdDict::preFadeToBlackFrames);
-    CmdDict::defineCommand("FTBFRAMESLEFT", &CmdDict::preFadeToBlackFramesLeft);
-    CmdDict::defineCommand("FTBLIVE", &CmdDict::preFadeToBlackFading);
-    CmdDict::defineCommand("INFO", &CmdDict::preInfo);
-    CmdDict::defineCommand("ININFO", &CmdDict::preInputInfo);
-    CmdDict::defineCommand("INNAMEL", &CmdDict::preInputNameLong);
-    CmdDict::defineCommand("INNAMES", &CmdDict::preInputNameShort);
-    CmdDict::defineCommand("INTYPE", &CmdDict::preInputType);
-    CmdDict::defineCommand("PREV", &CmdDict::prePreview);
-    CmdDict::defineCommand("PROG", &CmdDict::preProgram);
-    CmdDict::defineCommand("SETTINGS", &CmdDict::preSettings);
-    CmdDict::defineCommand("TCURRKEY", &CmdDict::preTransitionCurrentKey);
-    CmdDict::defineCommand("TCURRSTYLE", &CmdDict::preTransitionCurrentStyle);
-    CmdDict::defineCommand("TDIPFRAMES", &CmdDict::preTransitionDipFrames);
-    CmdDict::defineCommand("TDIPSRC", &CmdDict::preTransitionDipSource);
-    //CmdDict::defineCommand("TDVEFILLSRC", &CmdDict::preTransitionDVEFillSource);
-    //CmdDict::defineCommand("TDVEEFFECT", &CmdDict::preTransitionDVEEffect);
-    //CmdDict::defineCommand("TDVEFRAMES", &CmdDict::preTransitionDVEFrames);
-    CmdDict::defineCommand("TFRAMES", &CmdDict::preTransitionFrames);
-    CmdDict::defineCommand("TLYCHNLS", &CmdDict::preTallyChannelCount);
-    CmdDict::defineCommand("TLYINDXS", &CmdDict::preTallyIndexCount);
-    CmdDict::defineCommand("TLYSTATE", &CmdDict::preTallyState);
-    CmdDict::defineCommand("TMIXFRAMES", &CmdDict::preTransitionMixFrames);
-    //CmdDict::defineCommand("TNEXTBG", &CmdDict::preTransitionNextBackground);
-    CmdDict::defineCommand("TNEXTKEY", &CmdDict::preTransitionNextKey);
-    CmdDict::defineCommand("TNEXTSTYLE", &CmdDict::preTransitionNextStyle);
-    CmdDict::defineCommand("TPOS", &CmdDict::preTransitionPosition);
-    CmdDict::defineCommand("TPREV", &CmdDict::preTransitionPreview);
-    CmdDict::defineCommand("TRANS", &CmdDict::preAutoTransition);
-    CmdDict::defineCommand("VDOWNCONTYPE", &CmdDict::preVideoDownConvertType);
-    CmdDict::defineCommand("VFMT", &CmdDict::preVideoFormat);
+    CmdDict::defineCommand("HELP", &CmdDict::preHelp, ENABLE_ALWAYS);
+    CmdDict::defineCommand("QUIT", &CmdDict::preQuit, ENABLE_ALWAYS);
+    CmdDict::defineCommand("EXIT", &CmdDict::preQuit, ENABLE_ALWAYS);
+    CmdDict::defineCommand("CONN", &CmdDict::preConnection, ENABLE_ALWAYS);
+    
+    
+    CmdDict::defineCommand("ACHNLS", &CmdDict::preAudioChannelCount, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AINBAL", &CmdDict::preAudioInBalance, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AINGAIN", &CmdDict::preAudioInGain, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AININFO", &CmdDict::preAudioInInfo, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AINPEAK", &CmdDict::preAudioInPeak, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AINSTATE", &CmdDict::preAudioInState, ENABLE_CONNECTED);
+    CmdDict::defineCommand("ALVLS", &CmdDict::preAudioLevels, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AMSTRGAIN", &CmdDict::preAudioMasterGain, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AMSTRLVL", &CmdDict::preAudioMasterLevels, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AMSTRPEAK", &CmdDict::preAudioMasterPeak, ENABLE_CONNECTED);
+    CmdDict::defineCommand("AUXSRC", &CmdDict::preAuxSource, ENABLE_CONNECTED);
+    CmdDict::defineCommand("CLRGENC", &CmdDict::preColorGeneratorColor, ENABLE_CONNECTED);
+    CmdDict::defineCommand("CUT", &CmdDict::preCut, ENABLE_CONNECTED);
+    CmdDict::defineCommand("DEBUG", &CmdDict::preDebug, ENABLE_CONNECTED);
+    CmdDict::defineCommand("DSKEY", &CmdDict::preDSKeyLive, ENABLE_CONNECTED);
+    CmdDict::defineCommand("DSKAUTO", &CmdDict::preDSKeyAuto, ENABLE_CONNECTED);
+    CmdDict::defineCommand("DSKARATE", &CmdDict::preDSKeyAutoFrameRate, ENABLE_CONNECTED);
+    CmdDict::defineCommand("DSKTIE", &CmdDict::preDSKeyTie, ENABLE_CONNECTED);
+    CmdDict::defineCommand("FTB", &CmdDict::preFadeToBlack, ENABLE_CONNECTED);
+    CmdDict::defineCommand("FTBFRAMES", &CmdDict::preFadeToBlackFrames, ENABLE_CONNECTED);
+    CmdDict::defineCommand("FTBFRAMESLEFT", &CmdDict::preFadeToBlackFramesLeft, ENABLE_CONNECTED);
+    CmdDict::defineCommand("FTBLIVE", &CmdDict::preFadeToBlackFading, ENABLE_CONNECTED);
+    CmdDict::defineCommand("INFO", &CmdDict::preInfo, ENABLE_CONNECTED);
+    CmdDict::defineCommand("ININFO", &CmdDict::preInputInfo, ENABLE_CONNECTED);
+    CmdDict::defineCommand("INNAMEL", &CmdDict::preInputNameLong, ENABLE_CONNECTED);
+    CmdDict::defineCommand("INNAMES", &CmdDict::preInputNameShort, ENABLE_CONNECTED);
+    CmdDict::defineCommand("INTYPE", &CmdDict::preInputType, ENABLE_CONNECTED);
+    CmdDict::defineCommand("PREV", &CmdDict::prePreview, ENABLE_CONNECTED);
+    CmdDict::defineCommand("PROG", &CmdDict::preProgram, ENABLE_CONNECTED);
+    CmdDict::defineCommand("SETTINGS", &CmdDict::preSettings, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TCURRKEY", &CmdDict::preTransitionCurrentKey, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TCURRSTYLE", &CmdDict::preTransitionCurrentStyle, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TDIPFRAMES", &CmdDict::preTransitionDipFrames, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TDIPSRC", &CmdDict::preTransitionDipSource, ENABLE_CONNECTED);
+    //CmdDict::defineCommand("TDVEFILLSRC", &CmdDict::preTransitionDVEFillSource, ENABLE_CONNECTED);
+    //CmdDict::defineCommand("TDVEEFFECT", &CmdDict::preTransitionDVEEffect, ENABLE_CONNECTED);
+    //CmdDict::defineCommand("TDVEFRAMES", &CmdDict::preTransitionDVEFrames, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TFRAMES", &CmdDict::preTransitionFrames, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TLYCHNLS", &CmdDict::preTallyChannelCount, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TLYINDXS", &CmdDict::preTallyIndexCount, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TLYSTATE", &CmdDict::preTallyState, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TMIXFRAMES", &CmdDict::preTransitionMixFrames, ENABLE_CONNECTED);
+    //CmdDict::defineCommand("TNEXTBG", &CmdDict::preTransitionNextBackground, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TNEXTKEY", &CmdDict::preTransitionNextKey, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TNEXTSTYLE", &CmdDict::preTransitionNextStyle, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TPOS", &CmdDict::preTransitionPosition, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TPREV", &CmdDict::preTransitionPreview, ENABLE_CONNECTED);
+    CmdDict::defineCommand("TRANS", &CmdDict::preAutoTransition, ENABLE_CONNECTED);
+    CmdDict::defineCommand("VDOWNCONTYPE", &CmdDict::preVideoDownConvertType, ENABLE_CONNECTED);
+    CmdDict::defineCommand("VFMT", &CmdDict::preVideoFormat, ENABLE_CONNECTED);
     
 }
 
@@ -93,7 +98,7 @@ CmdDict::CmdDict(CLIApp * app){
 /**
  * Adds new command and corresponding handler to Trie 
  */
-void CmdDict::defineCommand(QString cmd_name, void (*handler)(QStringList)){
+void CmdDict::defineCommand(QString cmd_name, void (*handler)(QStringList), int cmd_access){
 
     QString key = cmd_name.toUpper(); //extract key that Trie traverses
     
@@ -118,6 +123,7 @@ void CmdDict::defineCommand(QString cmd_name, void (*handler)(QStringList)){
     }
     
     node->currentCmd = handler;
+    node->cmdAccess = cmd_access;
     
 }
 
@@ -126,25 +132,15 @@ void CmdDict::defineCommand(QString cmd_name, void (*handler)(QStringList)){
  */
 void CmdDict::parseCommand(QStringList cmd){
     
-    if(cmd.size()<2){
-        if(cmd.size()==1){
-            if(cmd[0].toUpper()=="HELP"){
-                preHelp(cmd);
-            } else if(cmd[0].toUpper()=="QUIT"){
-                preQuit(cmd);
-            } else if(cmd[0].toUpper()=="EXIT"){
-                preQuit(cmd);
-            } else {
-                invalid(cmd);
-            }
-        } else {
-            invalid(cmd);
-        }
-        return;
+    QString key = "";
+    
+    if(cmd.size()==1){
+        key = cmd[0].toUpper(); //extract key that Trie traverses
+    } else if(cmd.size()>1){
+        key = cmd[1].toUpper(); //extract key that Trie traverses
+    } else {
+        invalid(cmd);
     }
-    
-    QString key = cmd[1].toUpper(); //extract key that Trie traverses
-    
     
     struct CmdTrieNode * node = cmdTrieRoot;
     for(int i = 0; i < key.size(); i++) {
@@ -163,6 +159,12 @@ void CmdDict::parseCommand(QStringList cmd){
             return;
         }
 
+    }
+    
+    if(!(node->cmdAccess & app->currentAccess)){
+        // If command does not have access
+        invalid(cmd);
+        return;
     }
     
     node->currentCmd(cmd);

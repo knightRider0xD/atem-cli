@@ -1,5 +1,5 @@
 /*
-Copyright 2015  Ian Knight <ian@knightly.xyz>
+Copyright 2017  Ian Knight <ian@knightly.xyz>
 
 This file is part of atem-cli.
 
@@ -8,7 +8,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Foobar is distributed in the hope that it will be useful,
+atem-cli is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -17,12 +17,8 @@ You should have received a copy of the GNU General Public License
 along with atem-cli.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QtCore>
 #include <QApplication>
 #include <iostream>
-#include <QObject>
-#include <QTextStream>
-#include <QHostAddress>
 
 #include "cliapp.h"
 #include "cmddict.h"
@@ -39,7 +35,6 @@ void CLIReader::run(){
     while(true){
         
         line = qin->readLine();
-        //qout << line << endl;
         emit cmdReady(line.split(" "));
         
     }
@@ -48,14 +43,19 @@ void CLIReader::run(){
 
 
 void CLIApp::run(){
+    
+    currentAccess = ENABLE_ALWAYS;
 
     m_atemConnection = new QAtemConnection(this);
-    
     connectAtemEvents();
     
     qout << atem_address.toString() << endl;
     
     m_atemConnection->connectToSwitcher(atem_address);
+    
+    reader = new CLIReader(this,&qin);
+    connect(reader, SIGNAL(cmdReady(QStringList)), this, SLOT(processCmd(QStringList)));
+    reader->start();
     
 }
 
@@ -189,9 +189,50 @@ void CLIApp::helpVFmt(){
     "   17:            2160p29.97" << endl;
 }
     
+
 void CLIApp::quit(){
+    
+    //disable auto-reconnect
     reconnect = false;
+
+    //close CLI
+    if (reader){
+        reader->terminate();
+        delete reader;
+        reader = NULL;
+    }
+    
+    //stop handling events from switch
+    disconnect(m_mixEffect, 0, 0, 0);
+    disconnect(m_downstreamKey_0, 0, 0, 0);
+    disconnect(m_downstreamKey_1, 0, 0, 0);
+    disconnect(m_atemConnection, 0, 0, 0);
+    
+    //If not connected exit immediately
+    if(!(currentAccess & ENABLE_CONNECTED)){
+        emit finished();
+        return;
+    }
+    
+    //connect disconnected event to finaliser
+    connect(m_atemConnection, SIGNAL(disconnected()), this, SLOT(quit_final()));
+    
+    //setup 4s timeout if switch not responding
+    quit_timer = new QTimer(this);
+    connect(quit_timer, SIGNAL(timeout()), this, SLOT(quit_final()));
+    quit_timer->start(4000);
+    
+    //issue a disconnect request
     m_atemConnection->disconnectFromSwitcher();
+    
+}
+
+void CLIApp::quit_final(){
+    
+    if(quit_timer->isActive()){
+        quit_timer->stop();
+    }
+    
     emit finished();
 }
     
@@ -591,6 +632,7 @@ void CLIApp::setVideoFormat(quint8 format){
 void CLIApp::onAtemConnected()
 {
     reconnect = true;
+    currentAccess = ENABLE_ALWAYS | ENABLE_CONNECTED;
     qout << "Connected" << endl;
     
     if (!m_mixEffect){
@@ -604,24 +646,16 @@ void CLIApp::onAtemConnected()
         connectDSKeyerEvents();
     }
     
-    reader = new CLIReader(this,&qin);
-    connect(reader, SIGNAL(cmdReady(QStringList)), this, SLOT(processCmd(QStringList)));
-    reader->start();
-    
     qout << "Ready" << endl;
     
 }
 
 void CLIApp::onAtemDisconnected()
 {
-    if (reader){
-        reader->terminate();
-        delete reader;
-        reader = NULL;
-    }
+    currentAccess = ENABLE_ALWAYS;
     
     if(!reconnect){
-        qout << "Disconnected ... Exiting";
+        qout << "Disconnected" << endl;
         return;
     }
     
