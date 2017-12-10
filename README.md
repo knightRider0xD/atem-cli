@@ -10,18 +10,22 @@ This tool was designed primarily for use as a way to allow programs written in l
   * Change Program, Preview, Aux
   * Fade, Cut, Dip transitions
   * Fade to Black
-  * Enable/disable/check upstream keyers for next & current transition (in testing)
   * Get Audio Level feed
   * Get/set Channel & Master Volume & Balance
   * Color generator
   * Get/set output resolution/framerate & HD-SDI down-conversion format
   * Save and Clear Settings
 
+### Testing:
+
+  * Enable/disable/check upstream keyers for next & current transition
+  * Enable/disable/check downstream keyers for next & current transition
+  * Enable/disable/check downstream keyers on air
+
 ### In progress:
 
   * Enable/disable/check upstream keyers on air
-  * Enable/disable/check downstream keyers for next & current transition
-  * Enable/disable/check downstream keyers on air
+ 
 
 ### Todo:
 
@@ -55,6 +59,10 @@ CLRGENC        {GET|SET}               GENERATOR R G B
 CONN           {START|STOP|GET}  
 CUT            {DO}  
 DEBUG          {ENABLE|DISABLE|GET} 
+DSKEY          {GET|SET}               ALL|KEYER STATE
+DSKAUTO        {DO}                    KEYER
+DSKARATE       {GET|SET}               KEYER FRAMERATE
+DSKTIE         {GET|SET}               ALL|KEYER STATE
 FTB            {DO|UNDO|TOGGLE|GET}  
 FTBFRAMES      {GET|SET}               INDEX  
 FTBFRAMESLEFT  {GET}                   INDEX  

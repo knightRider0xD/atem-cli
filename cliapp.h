@@ -1,5 +1,5 @@
 /*
-Copyright 2015  Ian Knight <ian@knightly.xyz>
+Copyright 2017  Ian Knight <ian@knightly.xyz>
 
 This file is part of atem-cli.
 
@@ -8,7 +8,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Foobar is distributed in the hope that it will be useful,
+atem-cli is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -24,6 +24,7 @@ along with atem-cli.  If not, see <http://www.gnu.org/licenses/>.
 #include <QObject>
 #include <QTextStream>
 #include <QHostAddress>
+#include <QTimer>
 #include "qatemtypes.h"
 #include "qatemmixeffect.h"
 #include "qatemconnection.h"
@@ -50,22 +51,26 @@ class CLIApp : public QObject
     Q_OBJECT
 private:
     bool reconnect = true;
+    QTimer *quit_timer;
     QTextStream qin;
     QTextStream qout;
     QHostAddress atem_address;
-    QAtemMixEffect *m_mixEffect;
-    QAtemDownstreamKey *m_downstreamKey;
-    QAtemConnection *m_atemConnection;
-    CLIReader *reader;
+    QAtemMixEffect *m_mixEffect             = NULL;
+    QAtemDownstreamKey *m_downstreamKey_0   = NULL;
+    QAtemDownstreamKey *m_downstreamKey_1   = NULL;
+    QAtemConnection *m_atemConnection       = NULL;
+    CLIReader *reader                       = NULL;
     
     QList<quint16> aLvlUpdateList;
     
+    void quit_final();
     void connectAtemEvents(); 
     void connectDSKeyerEvents();
     void connectMixEffectEvents();
     
 public:
     CLIApp(QObject *parent = 0, QString address = QString("192.168.10.240")) : QObject(parent), qin(stdin), qout(stdout){ if(!atem_address.setAddress(address)){emit finished();} }
+    int currentAccess = 0;
     
     //void printStatus();
     
@@ -79,6 +84,7 @@ public:
     
     void doCut();
     void doAutoTransition();
+    void doDSKeyAuto(quint8 keyer);
     
     void saveSettings();
     void clearSettings();
@@ -96,6 +102,9 @@ public:
     void getColorGeneratorColor(quint8 generator);
     void getConnection();
     void getDebug();
+    void getDSKeyLive(quint8 keyer);
+    void getDSKeyAutoFrameRate(quint8 keyer);
+    void getDSKeyTie(quint8 keyer);
     void getFadeToBlack();
     void getFadeToBlackFading();
     void getFadeToBlackFrames();
@@ -137,6 +146,9 @@ public:
     void setColorGeneratorColor(quint8 generator, quint8 red, quint8 green, quint8 blue);
     void setConnection(bool enable);
     void setDebug(bool enable);
+    void setDSKeyLive(quint8 keyer, bool enable); //0 = Off, 1 = On
+    void setDSKeyAutoFrameRate(quint8 keyer, quint8 rate); //value 0-250
+    void setDSKeyTie(quint8 keyer, bool enable); //0 = Off, 1 = On
     void setFadeToBlack(bool ftb);
     void toggleFadeToBlack();
     void setFadeToBlackFrames(quint8 frames);
@@ -180,7 +192,7 @@ public slots:
     void onAtemDownstreamKeyOnChanged(quint8 keyer, bool state);
     void onAtemDownstreamKeyTieChanged(quint8 keyer, bool state);
     void onAtemDownstreamKeyFrameCountChanged(quint8 keyer, quint8 count);
-    void onAtemDownstreamKeyFramesChanged(quint8 keyer, quint8 frames);
+    void onAtemDownstreamKeyFrameRateChanged(quint8 keyer, quint8 frames);
     void onAtemDownstreamKeySourcesChanged(quint8 keyer, quint16 fill, quint16 key);
     void onAtemDownstreamKeyInvertKeyChanged(quint8 keyer, bool invert);
     void onAtemDownstreamKeyPreMultipliedChanged(quint8 keyer, bool preMultiplied);

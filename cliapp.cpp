@@ -1,5 +1,5 @@
 /*
-Copyright 2015  Ian Knight <ian@knightly.xyz>
+Copyright 2017  Ian Knight <ian@knightly.xyz>
 
 This file is part of atem-cli.
 
@@ -8,7 +8,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Foobar is distributed in the hope that it will be useful,
+atem-cli is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -17,12 +17,8 @@ You should have received a copy of the GNU General Public License
 along with atem-cli.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QtCore>
 #include <QApplication>
 #include <iostream>
-#include <QObject>
-#include <QTextStream>
-#include <QHostAddress>
 
 #include "cliapp.h"
 #include "cmddict.h"
@@ -39,7 +35,6 @@ void CLIReader::run(){
     while(true){
         
         line = qin->readLine();
-        //qout << line << endl;
         emit cmdReady(line.split(" "));
         
     }
@@ -48,14 +43,19 @@ void CLIReader::run(){
 
 
 void CLIApp::run(){
+    
+    currentAccess = ENABLE_ALWAYS;
 
     m_atemConnection = new QAtemConnection(this);
-    
     connectAtemEvents();
     
     qout << atem_address.toString() << endl;
     
     m_atemConnection->connectToSwitcher(atem_address);
+    
+    reader = new CLIReader(this,&qin);
+    connect(reader, SIGNAL(cmdReady(QStringList)), this, SLOT(processCmd(QStringList)));
+    reader->start();
     
 }
 
@@ -71,7 +71,8 @@ void CLIApp::processCmd(QStringList cmd){
 void CLIApp::help(){
     qout << "\n"
     "        ~ CLI for Blackmagic ATEM Switchers ~\n"
-    "Commands:         {PREFIXES}              ARGUMENTS \n"
+    "   COMMAND        {PREFIXES}              ARGUMENTS\n"
+    "   ─────────────────────────────────────────────────────────\n"
     "   ACHNLS         {GET|HELP}\n"                                     //done
     "   AINBAL         {GET|SET}               INDEX BALANCE\n"     //done
     "   AINGAIN        {GET|SET}               INDEX GAIN\n"        //done
@@ -87,6 +88,10 @@ void CLIApp::help(){
     "   CONN           {START|STOP|GET}\n"                          //done
     "   CUT            {DO}\n"                                      //done
     "   DEBUG          {ENABLE|DISABLE|GET}\n"                      //done
+    "   DSKEY          {GET|SET}               ALL|KEYER STATE\n"   //done
+    "   DSKAUTO        {DO}                    KEYER\n"             //done
+    "   DSKARATE       {GET|SET}               KEYER FRAMERATE\n"   //done
+    "   DSKTIE         {GET|SET}               ALL|KEYER STATE\n"   //done
     "   FTB            {DO|UNDO|TOGGLE|GET}\n"                      //done
     "   FTBFRAMES      {GET|SET}               INDEX\n"             //done
     "   FTBFRAMESLEFT  {GET}                   INDEX\n"             //done
@@ -125,10 +130,8 @@ void CLIApp::help(){
 void CLIApp::helpVSrc(){
     qout << "\n"
     "Video Source IDs: (Not All Available on all Models)\n"
-    "   [0] =>         Black\n"
-    "   [1] =>         Input 1\n"
-    "   ...\n"
-    "   [20]           Input 20\n"
+    "   [0]            Black\n"
+    "   [1-20]         Inputs 1-20\n"
     "   [1000]         Color Bars\n"
     "   [2001]         Color 1\n"
     "   [2002]         Color 2\n"
@@ -145,9 +148,7 @@ void CLIApp::helpVSrc(){
     "   [6000]         Super Source\n"
     "   [7001]         Clean Feed 1\n"
     "   [7002]         Clean Feed 2\n"
-    "   [8001]         Auxilary 1\n"
-    "   ...\n"
-    "   [8006]         Auxilary 6\n"
+    "   [8001-8006]    Aux Outputs 1-6\n"
     "   [10010]        ME 1 Prog\n"
     "   [10011]        ME 1 Prev\n"
     "   [10020]        ME 2 Prog\n"
@@ -157,9 +158,7 @@ void CLIApp::helpVSrc(){
 void CLIApp::helpASrc(){
     qout << "\n"
     "Audio Source IDs: (Not All Available on all Models)\n"
-    "   [1]            Input 1\n"
-    "   ...\n"
-    "   [20]           Input 20\n"
+    "   [1-20]         Inputs 1-20\n"
     "   [1001]         XLR\n"
     "   [1101]         AES/EBU\n"
     "   [1201]         RCA\n"
@@ -190,9 +189,50 @@ void CLIApp::helpVFmt(){
     "   17:            2160p29.97" << endl;
 }
     
+
 void CLIApp::quit(){
+    
+    //disable auto-reconnect
     reconnect = false;
+
+    //close CLI
+    if (reader){
+        reader->terminate();
+        delete reader;
+        reader = NULL;
+    }
+    
+    //stop handling events from switch
+    disconnect(m_mixEffect, 0, 0, 0);
+    disconnect(m_downstreamKey_0, 0, 0, 0);
+    disconnect(m_downstreamKey_1, 0, 0, 0);
+    disconnect(m_atemConnection, 0, 0, 0);
+    
+    //If not connected exit immediately
+    if(!(currentAccess & ENABLE_CONNECTED)){
+        emit finished();
+        return;
+    }
+    
+    //connect disconnected event to finaliser
+    connect(m_atemConnection, SIGNAL(disconnected()), this, SLOT(quit_final()));
+    
+    //setup 4s timeout if switch not responding
+    quit_timer = new QTimer(this);
+    connect(quit_timer, SIGNAL(timeout()), this, SLOT(quit_final()));
+    quit_timer->start(4000);
+    
+    //issue a disconnect request
     m_atemConnection->disconnectFromSwitcher();
+    
+}
+
+void CLIApp::quit_final(){
+    
+    if(quit_timer->isActive()){
+        quit_timer->stop();
+    }
+    
     emit finished();
 }
     
@@ -206,6 +246,14 @@ void CLIApp::doCut(){
 
 void CLIApp::doAutoTransition(){
     m_mixEffect->autoTransition();
+}
+
+void CLIApp::doDSKeyAuto(quint8 keyer){
+    if (keyer==0){
+        m_downstreamKey_0->doAuto();
+    } else if (keyer==1){
+        m_downstreamKey_1->doAuto();
+    }
 }
 
 void CLIApp::saveSettings(){
@@ -285,6 +333,36 @@ void CLIApp::getConnection(){
 
 void CLIApp::getDebug(){
     qout << "DEBUG: "<< m_atemConnection->debugEnabled() << endl;
+}
+
+void CLIApp::getDSKeyLive(quint8 keyer){
+    if (keyer==0){
+        qout << "DSKEY: [ 0 ] "<< m_downstreamKey_0->onAir() << endl;
+    } else if (keyer==1){
+        qout << "DSKEY: [ 1 ] "<< m_downstreamKey_1->onAir() << endl;
+    } else if (keyer==255){
+        qout << "DSKEY: [ 0 ] "<< m_downstreamKey_0->onAir() << endl;
+        qout << "DSKEY: [ 1 ] "<< m_downstreamKey_1->onAir() << endl;
+    }
+}
+
+void CLIApp::getDSKeyAutoFrameRate(quint8 keyer){
+    if (keyer==0){
+        qout << "DSKARATE: [ 0 ] "<< m_downstreamKey_0->frameRate() << endl;
+    } else if (keyer==1){
+        qout << "DSKARATE: [ 1 ] "<< m_downstreamKey_1->frameRate() << endl;
+    }
+}
+
+void CLIApp::getDSKeyTie(quint8 keyer){
+    if (keyer==0){
+        qout << "DSKTIE: [ 0 ] "<< m_downstreamKey_0->tie() << endl;
+    } else if (keyer==1){
+        qout << "DSKTIE: [ 1 ] "<< m_downstreamKey_1->tie() << endl;
+    } else if (keyer==255){
+        qout << "DSKTIE: [ 0 ] "<< m_downstreamKey_0->tie() << endl;
+        qout << "DSKTIE: [ 1 ] "<< m_downstreamKey_1->tie() << endl;
+    }
 }
 
 void CLIApp::getFadeToBlack(){
@@ -447,6 +525,38 @@ void CLIApp::setDebug(bool enable){
     m_atemConnection->setDebugEnabled(enable);
 }
 
+void CLIApp::setDSKeyLive(quint8 keyer, bool enable){
+    if (keyer==0){
+        if(enable==m_downstreamKey_0->onAir()){
+            qout << "DSKEY: [ 0 ] "<< m_downstreamKey_0->onAir() << endl;
+        } else {
+            m_downstreamKey_0->setOnAir(enable);
+        }
+    } else if (keyer==1){
+        if(enable==m_downstreamKey_1->onAir()){
+            qout << "DSKEY: [ 1 ] "<< m_downstreamKey_1->onAir() << endl;
+        } else {
+            m_downstreamKey_1->setOnAir(enable);
+        }
+    }
+}
+
+void CLIApp::setDSKeyAutoFrameRate(quint8 keyer, quint8 rate){ //value 0-250
+    if (keyer==0){
+        m_downstreamKey_0->setFrameRate(rate);
+    } else if (keyer==1){
+        m_downstreamKey_1->setFrameRate(rate);
+    }
+}
+
+void CLIApp::setDSKeyTie(quint8 keyer, bool enable){
+    if (keyer==0){
+        m_downstreamKey_0->setTie(enable);
+    } else if (keyer==1){
+        m_downstreamKey_1->setTie(enable);
+    }
+}
+
 void CLIApp::setFadeToBlack(bool ftb){
     if(ftb==m_mixEffect->fadeToBlackEnabled()){
         qout << "FTB: " << ftb << endl;
@@ -522,16 +632,19 @@ void CLIApp::setVideoFormat(quint8 format){
 void CLIApp::onAtemConnected()
 {
     reconnect = true;
+    currentAccess = ENABLE_ALWAYS | ENABLE_CONNECTED;
     qout << "Connected" << endl;
-    m_mixEffect = m_atemConnection->mixEffect(0);
-    m_downstreamKey = m_atemConnection->downstreamKey(0);
     
-    connectMixEffectEvents();
-    connectDSKeyerEvents();
+    if (!m_mixEffect){
+        m_mixEffect = m_atemConnection->mixEffect(0);
+        connectMixEffectEvents();
+    }
     
-    reader = new CLIReader(this,&qin);
-    connect(reader, SIGNAL(cmdReady(QStringList)), this, SLOT(processCmd(QStringList)));
-    reader->start();
+    if (!m_downstreamKey_0){
+        m_downstreamKey_0 = m_atemConnection->downstreamKey(0);
+        m_downstreamKey_1 = m_atemConnection->downstreamKey(1);
+        connectDSKeyerEvents();
+    }
     
     qout << "Ready" << endl;
     
@@ -539,12 +652,10 @@ void CLIApp::onAtemConnected()
 
 void CLIApp::onAtemDisconnected()
 {
-    
-    reader->terminate();
-    delete reader;
+    currentAccess = ENABLE_ALWAYS;
     
     if(!reconnect){
-        qout << "Disconnected ... Exiting";
+        qout << "Disconnected" << endl;
         return;
     }
     
@@ -563,21 +674,22 @@ void CLIApp::onAtemSwitcherWarning(const QString &warningString){
 void CLIApp::onAtemTallyStatesChanged(){}
 
 void CLIApp::onAtemDownstreamKeyOnChanged(quint8 keyer, bool state){
-    Q_UNUSED(keyer)
-    Q_UNUSED(state)
+    qout << "DSKEY: [ " << keyer << " ] " << state << endl;
 }
+
 void CLIApp::onAtemDownstreamKeyTieChanged(quint8 keyer, bool state){
-    Q_UNUSED(keyer)
-    Q_UNUSED(state)
+    qout << "DSKTIE: [ " << keyer << " ] " << state << endl;
 }
+
 void CLIApp::onAtemDownstreamKeyFrameCountChanged(quint8 keyer, quint8 count){
     Q_UNUSED(keyer)
     Q_UNUSED(count)
 }
-void CLIApp::onAtemDownstreamKeyFramesChanged(quint8 keyer, quint8 frames){
-    Q_UNUSED(keyer)
-    Q_UNUSED(frames)
+
+void CLIApp::onAtemDownstreamKeyFrameRateChanged(quint8 keyer, quint8 frames){
+    qout << "DSKARATE: [ " << keyer << " ] " << frames << endl;
 }
+
 void CLIApp::onAtemDownstreamKeySourcesChanged(quint8 keyer, quint16 fill, quint16 key){
     Q_UNUSED(keyer)
     Q_UNUSED(fill)
@@ -616,10 +728,19 @@ void CLIApp::onAtemColorGeneratorColorChanged(quint8 generator, const QColor& co
     qout << "CLRGEN: [ "<<generator<<" ] " << color.red() << " " << color.green() << " " << color.blue() << endl;
 }
 
-void CLIApp::onAtemMediaPlayerChanged(quint8 player, quint8 type, quint8 still, quint8 clip){}
-void CLIApp::onAtemMediaPlayerStateChanged(quint8 player, const QAtem::MediaPlayerState& state){}
+void CLIApp::onAtemMediaPlayerChanged(quint8 player, quint8 type, quint8 still, quint8 clip){
+    Q_UNUSED(player)
+    Q_UNUSED(type)
+    Q_UNUSED(still)
+    Q_UNUSED(clip)
+}
+void CLIApp::onAtemMediaPlayerStateChanged(quint8 player, const QAtem::MediaPlayerState& state){
+    Q_UNUSED(player)
+    Q_UNUSED(state)
+}
 
 void CLIApp::onAtemAuxSourceChanged(quint8 aux, quint16 source){
+    Q_UNUSED(source)
     qout << "AUX: [ "<<aux<<" ] " << m_atemConnection->auxSource(aux) << endl;
 }
 
@@ -695,21 +816,48 @@ void CLIApp::onAtemAudioLevelsChanged(){
     }
 }
 
-void CLIApp::onAtemMediaLockStateChanged(quint8 id, bool state){}
-void CLIApp::onAtemGetLockStateChanged(quint8 storeId, bool state){}
+void CLIApp::onAtemMediaLockStateChanged(quint8 id, bool state){
+    Q_UNUSED(id)
+    Q_UNUSED(state)
+}
+void CLIApp::onAtemGetLockStateChanged(quint8 storeId, bool state){
+    Q_UNUSED(storeId)
+    Q_UNUSED(state)
+}
 
-void CLIApp::onAtemDataTransferFinished(quint16 transferId){}
+void CLIApp::onAtemDataTransferFinished(quint16 transferId){
+    Q_UNUSED(transferId)
+}
 
-void CLIApp::onAtemTopologyChanged(const QAtem::Topology &topology){}
+void CLIApp::onAtemTopologyChanged(const QAtem::Topology &topology){
+    Q_UNUSED(topology)
+}
 
-void CLIApp::onAtemPowerStatusChanged(quint8 status){}
+void CLIApp::onAtemPowerStatusChanged(quint8 status){
+    Q_UNUSED(status)
+}
 
-void CLIApp::onAtemMultiViewLayoutChanged(quint8 multiView, quint8 layout){}
-void CLIApp::onAtemMultiViewInputsChanged(quint8 multiView){}
+void CLIApp::onAtemMultiViewLayoutChanged(quint8 multiView, quint8 layout){
+    Q_UNUSED(multiView)
+    Q_UNUSED(layout)
+}
+void CLIApp::onAtemMultiViewInputsChanged(quint8 multiView){
+    Q_UNUSED(multiView)
+}
 
-void CLIApp::onAtemMacroInfoChanged(quint8 index, const QAtem::MacroInfo &info){}
-void CLIApp::onAtemMacroRunningStateChanged(QAtem::MacroRunningState running, bool repeating, quint8 macroIndex){}
-void CLIApp::onAtemMacroRecordingStateChanged(bool recording, quint8 macroIndex){}
+void CLIApp::onAtemMacroInfoChanged(quint8 index, const QAtem::MacroInfo &info){
+    Q_UNUSED(index)
+    Q_UNUSED(info)
+}
+void CLIApp::onAtemMacroRunningStateChanged(QAtem::MacroRunningState running, bool repeating, quint8 macroIndex){
+    Q_UNUSED(running)
+    Q_UNUSED(repeating)
+    Q_UNUSED(macroIndex)
+}
+void CLIApp::onAtemMacroRecordingStateChanged(bool recording, quint8 macroIndex){
+    Q_UNUSED(recording)
+    Q_UNUSED(macroIndex)
+}
 
 
 
@@ -740,6 +888,7 @@ void CLIApp::onMixEffectTransitionPositionChanged(quint8 me, quint16 count){
 }
 void CLIApp::onMixEffectNextTransitionStyleChanged(quint8 me, quint8 style){
     Q_UNUSED(me)
+    Q_UNUSED(style)
     qout << "TNEXTSTYLE: " << m_mixEffect->nextTransitionStyle() << endl;
 }
 void CLIApp::onMixEffectKeyersOnNextTransitionChanged(quint8 me, quint8 keyers){
@@ -915,214 +1064,267 @@ void CLIApp::onMixEffectStingerMixRateChanged(quint8 me, quint16 frames){
 void CLIApp::onMixEffectUpstreamKeyOnAirChanged(quint8 me, quint8 keyer, bool state){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(state)
 }
 void CLIApp::onMixEffectUpstreamKeyTypeChanged(quint8 me, quint8 keyer, quint8 type){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(type)
 }
 void CLIApp::onMixEffectUpstreamKeyFillSourceChanged(quint8 me, quint8 keyer, quint16 source){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(source)
 }
 void CLIApp::onMixEffectUpstreamKeyKeySourceChanged(quint8 me, quint8 keyer, quint16 source){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(source)
 }
 void CLIApp::onMixEffectUpstreamKeyEnableMaskChanged(quint8 me, quint8 keyer, bool enable){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(enable)
 }
 void CLIApp::onMixEffectUpstreamKeyTopMaskChanged(quint8 me, quint8 keyer, float value){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(value)
 }
 void CLIApp::onMixEffectUpstreamKeyBottomMaskChanged(quint8 me, quint8 keyer, float value){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(value)
 }
 void CLIApp::onMixEffectUpstreamKeyLeftMaskChanged(quint8 me, quint8 keyer, float value){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(value)
 }
 void CLIApp::onMixEffectUpstreamKeyRightMaskChanged(quint8 me, quint8 keyer, float value){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(value)
 }
 void CLIApp::onMixEffectUpstreamKeyLumaPreMultipliedKeyChanged(quint8 me, quint8 keyer, bool preMultiplied){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(preMultiplied)
 }
 void CLIApp::onMixEffectUpstreamKeyLumaInvertKeyChanged(quint8 me, quint8 keyer, bool invert){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(invert)
 }
 void CLIApp::onMixEffectUpstreamKeyLumaClipChanged(quint8 me, quint8 keyer, float clip){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(clip)
 }
 void CLIApp::onMixEffectUpstreamKeyLumaGainChanged(quint8 me, quint8 keyer, float gain){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(gain)
 }
 void CLIApp::onMixEffectUpstreamKeyChromaHueChanged(quint8 me, quint8 keyer, float hue){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(hue)
 }
 void CLIApp::onMixEffectUpstreamKeyChromaGainChanged(quint8 me, quint8 keyer, float gain){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(gain)
 }
 void CLIApp::onMixEffectUpstreamKeyChromaYSuppressChanged(quint8 me, quint8 keyer, float ySuppress){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(ySuppress)
 }
 void CLIApp::onMixEffectUpstreamKeyChromaLiftChanged(quint8 me, quint8 keyer, float lift){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(lift)
 }
 void CLIApp::onMixEffectUpstreamKeyChromaNarrowRangeChanged(quint8 me, quint8 keyer, bool narrowRange){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(narrowRange)
 }
 void CLIApp::onMixEffectUpstreamKeyPatternPatternChanged(quint8 me, quint8 keyer, quint8 pattern){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(pattern)
 }
 void CLIApp::onMixEffectUpstreamKeyPatternInvertPatternChanged(quint8 me, quint8 keyer, bool invert){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(invert)
 }
 void CLIApp::onMixEffectUpstreamKeyPatternSizeChanged(quint8 me, quint8 keyer, float size){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(size)
 }
 void CLIApp::onMixEffectUpstreamKeyPatternSymmetryChanged(quint8 me, quint8 keyer, float symmetry){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(symmetry)
 }
 void CLIApp::onMixEffectUpstreamKeyPatternSoftnessChanged(quint8 me, quint8 keyer, float softness){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(softness)
 }
 void CLIApp::onMixEffectUpstreamKeyPatternXPositionChanged(quint8 me, quint8 keyer, float xPosition){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(xPosition)
 }
 void CLIApp::onMixEffectUpstreamKeyPatternYPositionChanged(quint8 me, quint8 keyer, float yPosition){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(yPosition)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEXPositionChanged(quint8 me, quint8 keyer, float xPosition){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(xPosition)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEYPositionChanged(quint8 me, quint8 keyer, float yPosition){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(yPosition)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEXSizeChanged(quint8 me, quint8 keyer, float xSize){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(xSize)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEYSizeChanged(quint8 me, quint8 keyer, float ySize){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(ySize)
 }
 void CLIApp::onMixEffectUpstreamKeyDVERotationChanged(quint8 me, quint8 keyer, float rotation){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(rotation)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEEnableDropShadowChanged(quint8 me, quint8 keyer, bool enable){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(enable)
 }
 void CLIApp::onMixEffectUpstreamKeyDVELighSourceDirectionChanged(quint8 me, quint8 keyer, float direction){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(direction)
 }
 void CLIApp::onMixEffectUpstreamKeyDVELightSourceAltitudeChanged(quint8 me, quint8 keyer, quint8 altitude){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(altitude)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEEnableBorderChanged(quint8 me, quint8 keyer, bool enable){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(enable)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderStyleChanged(quint8 me, quint8 keyer, quint8 style){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(style)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderColorChanged(quint8 me, quint8 keyer, QColor color){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(color)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderOutsideWidthChanged(quint8 me, quint8 keyer, float width){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(width)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderInsideWidthChanged(quint8 me, quint8 keyer, float width){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(width)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderOutsideSoftenChanged(quint8 me, quint8 keyer, quint8 soften){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(soften)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderInsideSoftenChanged(quint8 me, quint8 keyer, quint8 soften){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(soften)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderOpacityChanged(quint8 me, quint8 keyer, quint8 opacity){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(opacity)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderBevelPositionChanged(quint8 me, quint8 keyer, float position){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(position)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEBorderBevelSoftenChanged(quint8 me, quint8 keyer, float soften){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(soften)
 }
 void CLIApp::onMixEffectUpstreamKeyDVERateChanged(quint8 me, quint8 keyer, quint8 rate){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(rate)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEKeyFrameASetChanged(quint8 me, quint8 keyer, bool set){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(set)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEKeyFrameBSetChanged(quint8 me, quint8 keyer, bool set){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(set)
 }
 void CLIApp::onMixEffectUpstreamKeyEnableFlyChanged(quint8 me, quint8 keyer, bool enabled){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(enabled)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEKeyFrameChanged(quint8 me, quint8 keyer, quint8 frame){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(frame)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEMaskEnabledChanged(quint8 me, quint8 keyer, bool enabled){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(enabled)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEMaskTopChanged(quint8 me, quint8 keyer, float top){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(top)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEMaskBottomChanged(quint8 me, quint8 keyer, float bottom){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(bottom)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEMaskLeftChanged(quint8 me, quint8 keyer, float left){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(left)
 }
 void CLIApp::onMixEffectUpstreamKeyDVEMaskRightChanged(quint8 me, quint8 keyer, float right){
     Q_UNUSED(me)
     Q_UNUSED(keyer)
+    Q_UNUSED(right)
 }
     
 
@@ -1172,17 +1374,29 @@ void CLIApp::connectAtemEvents()
 void CLIApp::connectDSKeyerEvents()
 {
     //Setup Downstream Keyer event triggers
-    connect(m_downstreamKey, SIGNAL(onAirChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyOnChanged(quint8, bool)));
-    connect(m_downstreamKey, SIGNAL(tieChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyTieChanged(quint8, bool)));
-    connect(m_downstreamKey, SIGNAL(frameCountChanged(quint8, quint8)), this, SLOT(onAtemDownstreamKeyFrameCountChanged(quint8, quint8)));
-    connect(m_downstreamKey, SIGNAL(framesChanged(quint8, quint8)), this, SLOT(onAtemDownstreamKeyFramesChanged(quint8, quint8)));
-    connect(m_downstreamKey, SIGNAL(sourcesChanged(quint8, quint16, quint16)), this, SLOT(onAtemDownstreamKeySourcesChanged(quint8, quint16, quint16)));
-    connect(m_downstreamKey, SIGNAL(invertKeyChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyInvertKeyChanged(quint8, bool)));
-    connect(m_downstreamKey, SIGNAL(preMultipliedChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyPreMultipliedChanged(quint8, bool)));
-    connect(m_downstreamKey, SIGNAL(clipChanged(quint8, float)), this, SLOT(onAtemDownstreamKeyClipChanged(quint8, float)));
-    connect(m_downstreamKey, SIGNAL(gainChanged(quint8, float)), this, SLOT(onAtemDownstreamKeyGainChanged(quint8, float)));
-    connect(m_downstreamKey, SIGNAL(enableMaskChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyEnableMaskChanged(quint8, bool)));
-    connect(m_downstreamKey, SIGNAL(maskChanged(quint8, float, float, float, float)), this, SLOT(onAtemDownstreamKeyMaskChanged(quint8, float, float, float, float))); 
+    connect(m_downstreamKey_0, SIGNAL(onAirChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyOnChanged(quint8, bool)));
+    connect(m_downstreamKey_0, SIGNAL(tieChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyTieChanged(quint8, bool)));
+    connect(m_downstreamKey_0, SIGNAL(frameCountChanged(quint8, quint8)), this, SLOT(onAtemDownstreamKeyFrameCountChanged(quint8, quint8)));
+    connect(m_downstreamKey_0, SIGNAL(frameRateChanged(quint8, quint8)), this, SLOT(onAtemDownstreamKeyFrameRateChanged(quint8, quint8)));
+    connect(m_downstreamKey_0, SIGNAL(sourcesChanged(quint8, quint16, quint16)), this, SLOT(onAtemDownstreamKeySourcesChanged(quint8, quint16, quint16)));
+    connect(m_downstreamKey_0, SIGNAL(invertKeyChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyInvertKeyChanged(quint8, bool)));
+    connect(m_downstreamKey_0, SIGNAL(preMultipliedChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyPreMultipliedChanged(quint8, bool)));
+    connect(m_downstreamKey_0, SIGNAL(clipChanged(quint8, float)), this, SLOT(onAtemDownstreamKeyClipChanged(quint8, float)));
+    connect(m_downstreamKey_0, SIGNAL(gainChanged(quint8, float)), this, SLOT(onAtemDownstreamKeyGainChanged(quint8, float)));
+    connect(m_downstreamKey_0, SIGNAL(enableMaskChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyEnableMaskChanged(quint8, bool)));
+    connect(m_downstreamKey_0, SIGNAL(maskChanged(quint8, float, float, float, float)), this, SLOT(onAtemDownstreamKeyMaskChanged(quint8, float, float, float, float))); 
+    
+    connect(m_downstreamKey_1, SIGNAL(onAirChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyOnChanged(quint8, bool)));
+    connect(m_downstreamKey_1, SIGNAL(tieChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyTieChanged(quint8, bool)));
+    connect(m_downstreamKey_1, SIGNAL(frameCountChanged(quint8, quint8)), this, SLOT(onAtemDownstreamKeyFrameCountChanged(quint8, quint8)));
+    connect(m_downstreamKey_1, SIGNAL(frameRateChanged(quint8, quint8)), this, SLOT(onAtemDownstreamKeyFrameRateChanged(quint8, quint8)));
+    connect(m_downstreamKey_1, SIGNAL(sourcesChanged(quint8, quint16, quint16)), this, SLOT(onAtemDownstreamKeySourcesChanged(quint8, quint16, quint16)));
+    connect(m_downstreamKey_1, SIGNAL(invertKeyChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyInvertKeyChanged(quint8, bool)));
+    connect(m_downstreamKey_1, SIGNAL(preMultipliedChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyPreMultipliedChanged(quint8, bool)));
+    connect(m_downstreamKey_1, SIGNAL(clipChanged(quint8, float)), this, SLOT(onAtemDownstreamKeyClipChanged(quint8, float)));
+    connect(m_downstreamKey_1, SIGNAL(gainChanged(quint8, float)), this, SLOT(onAtemDownstreamKeyGainChanged(quint8, float)));
+    connect(m_downstreamKey_1, SIGNAL(enableMaskChanged(quint8, bool)), this, SLOT(onAtemDownstreamKeyEnableMaskChanged(quint8, bool)));
+    connect(m_downstreamKey_1, SIGNAL(maskChanged(quint8, float, float, float, float)), this, SLOT(onAtemDownstreamKeyMaskChanged(quint8, float, float, float, float))); 
 }
 
 void CLIApp::connectMixEffectEvents()
